@@ -43,6 +43,12 @@ streamlit run app.py
 | Video Processing | MoviePy |
 | Web Interface | Streamlit |
 
+## 📸 Output
+
+<p align="center">
+  <img src="assets/output_qr.png" alt="Output QR Code" width="300"/>
+</p>
+
 ## 👨‍💻 Author
 **Kuvalesh** — [@kuvaleshcd-hue](https://github.com/kuvaleshcd-hue)
 
