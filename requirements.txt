@@ -4,3 +4,4 @@ deep-translator
 edge-tts
 moviepy
 pydub
+numpy
