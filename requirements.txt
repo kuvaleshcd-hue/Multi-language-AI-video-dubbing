@@ -1,10 +1,6 @@
 streamlit
-faster-whisper
-edge-tts
+openai-whisper
 deep-translator
-moviepy==1.0.3
+edge-tts
+moviepy
 pydub
-python-dotenv
-bcrypt
-audioop-lts
-requests
