@@ -1,0 +1,128 @@
+[
+  {
+    "timestamp": "2026-07-07 09:45:55",
+    "source": "translate:Hindi\u2192Urdu:dubbed_hindi_male.mp4",
+    "language": "Urdu",
+    "gender": "male",
+    "segments": 5,
+    "elapsed_s": 11.4,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmp8bi_s9oj_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 09:45:06",
+    "source": "translate:Hindi\u2192Kannada:dubbed_hindi_male.mp4",
+    "language": "Kannada",
+    "gender": "male",
+    "segments": 5,
+    "elapsed_s": 16.4,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmpg6keqgz7_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 09:40:20",
+    "source": "upload:WhatsApp Video 2026-04-14 at 8.34.12 PM.mp4",
+    "language": "Hindi",
+    "gender": "male",
+    "segments": 5,
+    "elapsed_s": 15.0,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmpab02tquz_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 09:11:32",
+    "source": "batch:Git_Basics__Top_10_Commands.mp4",
+    "language": "Kannada",
+    "gender": "female",
+    "segments": 187,
+    "elapsed_s": 0,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmprb20gckc_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 09:03:56",
+    "source": "batch:WhatsApp Video 2026-04-14 at 8.34.12 PM.mp4",
+    "language": "Kannada",
+    "gender": "female",
+    "segments": 5,
+    "elapsed_s": 0,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmplpea4gj7_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 09:02:40",
+    "source": "batch:WhatsApp Video 2026-04-14 at 8.34.12 PM.mp4",
+    "language": "Kannada",
+    "gender": "female",
+    "segments": 5,
+    "elapsed_s": 0,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmp0r6_a516_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 09:02:32",
+    "source": "batch:WhatsApp Video 2026-04-14 at 8.34.12 PM.mp4",
+    "language": "Kannada",
+    "gender": "female",
+    "segments": 5,
+    "elapsed_s": 0,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmpvrx_tnn2_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 09:02:13",
+    "source": "batch:WhatsApp Video 2026-04-14 at 8.34.12 PM.mp4",
+    "language": "Kannada",
+    "gender": "female",
+    "segments": 5,
+    "elapsed_s": 0,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmpev9fla1__dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 09:01:42",
+    "source": "batch:WhatsApp Video 2026-04-14 at 8.34.12 PM.mp4",
+    "language": "Kannada",
+    "gender": "female",
+    "segments": 5,
+    "elapsed_s": 0,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmp88_u_16u_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 09:01:33",
+    "source": "batch:WhatsApp Video 2026-04-14 at 8.34.12 PM.mp4",
+    "language": "Kannada",
+    "gender": "female",
+    "segments": 5,
+    "elapsed_s": 0,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmprntvs5xk_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 08:59:53",
+    "source": "youtube:https://www.youtube.com/shorts/1Xid3uILPmw",
+    "language": "Kannada",
+    "gender": "female",
+    "segments": 7,
+    "elapsed_s": 23.4,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmpd06k5svu_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 08:54:02",
+    "source": "youtube:https://www.youtube.com/shorts/5J5ojMwGJ2Ia",
+    "language": "Kannada",
+    "gender": "female",
+    "segments": 6,
+    "elapsed_s": 10.8,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmp075yphb2_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 08:50:25",
+    "source": "youtube:https://www.youtube.com/shorts/5J5ojMwGJ2Ia",
+    "language": "Kannada",
+    "gender": "female",
+    "segments": 6,
+    "elapsed_s": 20.4,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmpg168lnvt_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 08:49:03",
+    "source": "youtube:https://www.youtube.com/shorts/zKydjDecq3E",
+    "language": "Kannada",
+    "gender": "female",
+    "segments": 15,
+    "elapsed_s": 27.6,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmp4rc0bu53_dubbed.mp4"
+  }
+]

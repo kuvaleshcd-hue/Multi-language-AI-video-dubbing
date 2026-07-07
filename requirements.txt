@@ -1,0 +1,10 @@
+streamlit
+openai-whisper
+deep-translator
+edge-tts
+moviepy
+pydub==0.25.1
+numpy
+audioop-lts
+bcrypt
+yt-dlp
