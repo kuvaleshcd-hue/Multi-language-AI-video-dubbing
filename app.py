@@ -13,7 +13,7 @@ load_dotenv()
 sys.path.insert(0, os.path.dirname(__file__))
 
 from pipeline.transcriber import transcribe
-from pipeline.translator import translate_segments, generate_srt, LANGUAGES
+from pipeline.translator import translate_segments, generate_srt, LANGUAGES, ALL_INDIAN_LANGUAGES
 from pipeline.synthesizer import synthesize_segments
 from pipeline.merger import merge_audio_video
 from auth import init_db, register_user, login_user
@@ -335,12 +335,13 @@ with st.sidebar:
 
 
 # ── Five Tabs ─────────────────────────────────────────────────────────────────
-tab_upload, tab_youtube, tab_batch, tab_history, tab_advanced = st.tabs([
+tab_upload, tab_youtube, tab_batch, tab_history, tab_advanced, tab_translate = st.tabs([
     "📁 Upload Video",
     "▶️ YouTube URL",
     "📂 Batch Dub",
     "📊 History",
     "⚙️ Advanced",
+    "🌍 Translate & Dub",
 ])
 
 
