@@ -1,5 +1,86 @@
 [
   {
+    "timestamp": "2026-07-09 22:16:17",
+    "source": "youtube:https://www.youtube.com/shorts/DRvRV0qRSlk",
+    "language": "Kannada",
+    "gender": "female",
+    "segments": 6,
+    "elapsed_s": 18.1,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmp8rc0o89f_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 21:19:40",
+    "source": "batch:WhatsApp Video 2026-03-18 at 4.38.01 PM.mp4",
+    "language": "Kannada",
+    "gender": "male",
+    "segments": 19,
+    "elapsed_s": 0,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmpi8n1c7l2_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 21:18:59",
+    "source": "batch:WhatsApp Video 2026-04-14 at 8.34.12 PM.mp4",
+    "language": "Kannada",
+    "gender": "male",
+    "segments": 5,
+    "elapsed_s": 0,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmp1arn8igi_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 21:17:58",
+    "source": "youtube:https://www.youtube.com/shorts/1F8Rt_vutPI",
+    "language": "Kannada",
+    "gender": "male",
+    "segments": 8,
+    "elapsed_s": 23.8,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmpckco4qyp_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 21:16:04",
+    "source": "upload:WhatsApp Video 2026-04-14 at 8.34.12 PM.mp4",
+    "language": "Kannada",
+    "gender": "male",
+    "segments": 5,
+    "elapsed_s": 9.4,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmpzkifc9o6_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 21:15:49",
+    "source": "upload:WhatsApp Video 2026-04-14 at 8.34.12 PM.mp4",
+    "language": "Kannada",
+    "gender": "female",
+    "segments": 5,
+    "elapsed_s": 10.9,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmpr8s2fzig_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 10:11:39",
+    "source": "youtube:https://www.youtube.com/shorts/Ko1chg1W1L4",
+    "language": "Kannada",
+    "gender": "male",
+    "segments": 7,
+    "elapsed_s": 19.2,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmpwjue5693_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 10:10:42",
+    "source": "upload:WhatsApp Video 2026-04-14 at 8.34.12 PM.mp4",
+    "language": "Kannada",
+    "gender": "male",
+    "segments": 5,
+    "elapsed_s": 9.8,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmpm5_uhwti_dubbed.mp4"
+  },
+  {
+    "timestamp": "2026-07-07 10:09:51",
+    "source": "upload:WhatsApp Video 2026-04-14 at 8.34.12 PM.mp4",
+    "language": "Kannada",
+    "gender": "male",
+    "segments": 5,
+    "elapsed_s": 12.1,
+    "output": "/var/folders/x5/wh_s_xsj29sd6hdpzdkb3d400000gn/T/tmph3a3d876_dubbed.mp4"
+  },
+  {
     "timestamp": "2026-07-07 09:45:55",
     "source": "translate:Hindi\u2192Urdu:dubbed_hindi_male.mp4",
     "language": "Urdu",
