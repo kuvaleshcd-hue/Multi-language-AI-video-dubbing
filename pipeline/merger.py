@@ -17,7 +17,7 @@ import subprocess
 from pydub import AudioSegment, effects
 
 TARGET_SAMPLE_RATE = 48000   # Match extractor + synthesizer
-TARGET_DBFS        = -14.0   # Louder, clearer final mix
+TARGET_DBFS        = -10.0   # Louder, clearer final mix
 FADE_MS            = 10      # 10ms fade to remove boundary click artifacts
 
 
@@ -121,8 +121,12 @@ def merge_audio_video(video_path: str, audio_segments: list[dict]) -> str:
     # 1. equalizer — boost voice presence at 2.5kHz
     # 2. loudnorm  — EBU R128 broadcast loudness normalization
     final_af = (
-        "equalizer=f=2500:t=q:w=1.5:g=2,"
-        "loudnorm=I=-16:TP=-1.5:LRA=11"
+        "highpass=f=80,"              # remove low-end rumble/hum
+        "equalizer=f=1000:t=q:w=1:g=2,"  # boost mid-range voice presence
+        "equalizer=f=3000:t=q:w=1.5:g=3,"  # boost clarity/articulation
+        "equalizer=f=200:t=q:w=1:g=-2,"   # cut muddy low-mids
+        "acompressor=threshold=-18dB:ratio=3:attack=5:release=50:makeup=3dB,"  # compress voice
+        "loudnorm=I=-14:TP=-1:LRA=7"  # broadcast loudness, tight range
     )
 
     cmd = [
@@ -134,7 +138,7 @@ def merge_audio_video(video_path: str, audio_segments: list[dict]) -> str:
         "-map", "-0:a",             # DROP all audio from input 0 — kills echo
         "-c:v", "copy",
         "-c:a", "aac",
-        "-b:a", "256k",
+        "-b:a", "320k",
         "-ar", str(TARGET_SAMPLE_RATE),
         "-af", final_af,
         "-shortest",
