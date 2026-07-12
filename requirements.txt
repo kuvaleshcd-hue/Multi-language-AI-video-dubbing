@@ -1,4 +1,4 @@
-streamlit
+streamlit>=1.28.0
 openai-whisper
 deep-translator
 edge-tts
@@ -8,3 +8,5 @@ numpy
 audioop-lts
 bcrypt
 yt-dlp
+requests
+python-dotenv
