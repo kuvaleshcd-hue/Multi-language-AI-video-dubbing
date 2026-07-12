@@ -253,22 +253,24 @@ def run_dubbing_pipeline(video_path: str, source_label: str = "upload"):
 # YOUTUBE HELPERS
 # ══════════════════════════════════════════════════════════════════════════════
 def download_youtube_video(url: str) -> str:
-    tmp_path   = tempfile.mktemp(suffix=".mp4")
+    tmp_path = tempfile.mktemp(suffix=".mp4")
     base_flags = [
         "--format", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
         "--merge-output-format", "mp4",
         "--output", tmp_path,
         "--no-playlist", "--no-warnings",
-        "--extractor-retries", "3",
-        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "--add-header", "Accept-Language:en-US,en;q=0.9",
+        "--extractor-retries", "5",
+        "--socket-timeout", "30",
+        "--user-agent", "com.google.android.youtube/17.36.4 (Linux; U; Android 12; GB) gzip",
     ]
     def _run(extra):
         return subprocess.run(["yt-dlp"] + extra + base_flags + [url],
                               capture_output=True, text=True)
-    result = _run(["--extractor-args", "youtube:player_client=android"])
+    result = _run(["--extractor-args", "youtube:player_client=android,web;po_token=web+MnpUKpOeLFGMvMf6cJLYrA=="])
     if result.returncode != 0:
-        result = _run(["--extractor-args", "youtube:player_client=web"])
+        result = _run(["--extractor-args", "youtube:player_client=android"])
+    if result.returncode != 0:
+        result = _run(["--extractor-args", "youtube:player_client=mweb"])
     if result.returncode != 0:
         result = _run([])
     if result.returncode != 0:
