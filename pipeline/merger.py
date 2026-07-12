@@ -12,6 +12,7 @@ Fixes:
 """
 
 import os
+import shutil
 import tempfile
 import subprocess
 from pydub import AudioSegment, effects
@@ -32,6 +33,33 @@ def _normalize_track(track: AudioSegment) -> AudioSegment:
     diff = TARGET_DBFS - track.dBFS
     return track.apply_gain(diff)
 
+
+
+def _time_stretch(input_wav, output_wav, target_s):
+    probe = subprocess.run(
+        ["ffprobe", "-v", "quiet", "-show_entries", "format=duration",
+         "-of", "csv=p=0", input_wav],
+        capture_output=True, text=True
+    )
+    try:
+        actual = float(probe.stdout.strip())
+    except Exception:
+        shutil.copy(input_wav, output_wav); return
+    if actual <= 0 or target_s <= 0:
+        shutil.copy(input_wav, output_wav); return
+    ratio = actual / target_s
+    if ratio < 0.25 or ratio > 4.0:
+        shutil.copy(input_wav, output_wav); return
+    filters = []
+    r = ratio
+    while r > 2.0: filters.append("atempo=2.0"); r /= 2.0
+    while r < 0.5: filters.append("atempo=0.5"); r *= 2.0
+    filters.append(f"atempo={r:.6f}")
+    subprocess.run([
+        "ffmpeg", "-y", "-i", input_wav,
+        "-af", ",".join(filters),
+        "-ar", "48000", "-ac", "2", output_wav
+    ], capture_output=True)
 
 def build_dub_track(
     audio_segments: list[dict],
@@ -54,18 +82,36 @@ def build_dub_track(
         if clip is None and seg.get("audio_path"):
             clip = AudioSegment.from_wav(seg["audio_path"])
 
-        pos = _ms(seg["start"])
-
         if not isinstance(clip, AudioSegment) or len(clip) == 0:
             continue
 
-        # Ensure consistent format
-        clip = (clip
-                .set_frame_rate(TARGET_SAMPLE_RATE)
-                .set_channels(2)
-                .set_sample_width(2))
+        clip = clip.set_frame_rate(TARGET_SAMPLE_RATE).set_channels(2).set_sample_width(2)
 
-        # Fade in/out to remove click artifacts at segment edges
+        seg_start = float(seg.get("start", 0))
+        seg_end   = float(seg.get("end", seg_start + len(clip)/1000))
+        target_s  = seg_end - seg_start
+        pos       = _ms(seg_start)
+
+        if target_s > 0.2:
+            tmp_dir = tempfile.mkdtemp()
+            in_wav  = os.path.join(tmp_dir, "in.wav")
+            out_wav = os.path.join(tmp_dir, "out.wav")
+            clip.export(in_wav, format="wav")
+            _time_stretch(in_wav, out_wav, target_s)
+            if os.path.exists(out_wav):
+                try:
+                    clip = AudioSegment.from_wav(out_wav)
+                    clip = clip.set_frame_rate(TARGET_SAMPLE_RATE).set_channels(2).set_sample_width(2)
+                except: pass
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
+        if clip.dBFS != float("-inf"):
+            clip = clip.apply_gain(TARGET_DBFS - clip.dBFS)
+
+        target_ms = _ms(target_s) if target_s > 0 else len(clip)
+        if len(clip) > target_ms:
+            clip = clip[:target_ms]
+
         clip = clip.fade_in(FADE_MS).fade_out(FADE_MS)
 
         # Safety: don't write past track end
