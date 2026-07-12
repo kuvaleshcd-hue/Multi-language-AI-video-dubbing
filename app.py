@@ -22,11 +22,28 @@ from auth import init_db, register_user, login_user
 init_db()
 
 st.set_page_config(
-    page_title="VideoDubber — AI Dubbing",
-    page_icon="🎬",
+    page_title="BharatDub — AI Video Dubbing",
+    page_icon="🇮🇳",
     layout="centered"
 )
 
+
+st.markdown("""
+<style>
+.bharatdub-header {
+    background: linear-gradient(135deg, #FF6B35 0%, #F7931E 40%, #138808 100%);
+    padding: 2rem; border-radius: 16px; text-align: center;
+    margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(255,107,53,0.3);
+}
+.bharatdub-header h1 { color: white !important; font-size: 2.6rem; font-weight: 800; margin: 0; }
+.bharatdub-header p { color: rgba(255,255,255,0.92); font-size: 1rem; margin: 0.4rem 0 0; }
+.stButton > button[kind="primary"] {
+    background: linear-gradient(135deg, #FF6B35, #F7931E) !important;
+    border: none !important; border-radius: 10px !important; font-weight: 700 !important;
+}
+.stTabs [aria-selected="true"] { background: linear-gradient(135deg, #FF6B35, #F7931E) !important; color: white !important; }
+</style>
+""", unsafe_allow_html=True)
 HISTORY_FILE = "dub_history.json"
 
 # ── Session state defaults ────────────────────────────────────────────────────
@@ -49,7 +66,7 @@ for k, v in defaults.items():
 # AUTH PAGES
 # ══════════════════════════════════════════════════════════════════════════════
 def show_login():
-    st.markdown("<h2 style='text-align:center'>🎬 VideoDubber</h2>", unsafe_allow_html=True)
+    st.markdown("<div class="bharatdub-header"><h1>🇮🇳 BharatDub</h1></div>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center;color:#666'>AI-powered multilingual video dubbing</p>", unsafe_allow_html=True)
     st.divider()
 
@@ -80,7 +97,7 @@ def show_login():
 
 
 def show_register():
-    st.markdown("<h2 style='text-align:center'>🎬 VideoDubber</h2>", unsafe_allow_html=True)
+    st.markdown("<div class="bharatdub-header"><h1>🇮🇳 BharatDub</h1></div>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center;color:#666'>Create your free account</p>", unsafe_allow_html=True)
     st.divider()
 
@@ -292,7 +309,7 @@ def extract_video_id(url: str):
 # ══════════════════════════════════════════════════════════════════════════════
 # MAIN APP
 # ══════════════════════════════════════════════════════════════════════════════
-st.title("🎬 VideoDubber")
+st.markdown('<div class="bharatdub-header"><h1>🇮🇳 BharatDub</h1><p>AI-powered video dubbing — Kannada · Hindi · Tamil · Telugu · Malayalam · Gujarati</p></div>', unsafe_allow_html=True)
 st.caption("AI-powered video dubbing — Kannada · Hindi · Tamil · Telugu · Malayalam · Bhojpuri · Gujarati")
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
