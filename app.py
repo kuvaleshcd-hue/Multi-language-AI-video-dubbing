@@ -260,18 +260,19 @@ def download_youtube_video(url: str) -> str:
         "--output", tmp_path,
         "--no-playlist", "--no-warnings",
         "--extractor-retries", "3",
+        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "--add-header", "Accept-Language:en-US,en;q=0.9",
     ]
-
     def _run(extra):
         return subprocess.run(["yt-dlp"] + extra + base_flags + [url],
                               capture_output=True, text=True)
-
-    result = _run(["--cookies-from-browser", "chrome"])
+    result = _run(["--extractor-args", "youtube:player_client=android"])
+    if result.returncode != 0:
+        result = _run(["--extractor-args", "youtube:player_client=web"])
     if result.returncode != 0:
         result = _run([])
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or "yt-dlp failed.")
-
     if not os.path.exists(tmp_path):
         alt = tmp_path + ".mp4"
         if os.path.exists(alt):
