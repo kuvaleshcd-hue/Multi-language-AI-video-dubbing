@@ -48,6 +48,8 @@ def _time_stretch(input_wav, output_wav, target_s):
     if actual <= 0 or target_s <= 0:
         shutil.copy(input_wav, output_wav); return
     ratio = actual / target_s
+    # Limit ratio — never speed up more than 1.3x or slow down more than 0.8x
+    ratio = max(0.8, min(ratio, 1.3))
     if ratio < 0.25 or ratio > 4.0:
         shutil.copy(input_wav, output_wav); return
     filters = []
