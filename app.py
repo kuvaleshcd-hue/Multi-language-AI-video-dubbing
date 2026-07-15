@@ -13,7 +13,7 @@ load_dotenv()
 sys.path.insert(0, os.path.dirname(__file__))
 
 from pipeline.transcriber import transcribe
-from pipeline.translator import translate_segments, generate_srt, LANGUAGES, ALL_INDIAN_LANGUAGES, ALL_INDIAN_LANGUAGES
+from pipeline.translator import translate_segments, generate_srt, LANGUAGES, ALL_INDIAN_LANGUAGES
 from pipeline.synthesizer import synthesize_segments
 from pipeline.merger import merge_audio_video
 from auth import init_db, register_user, login_user
@@ -22,28 +22,11 @@ from auth import init_db, register_user, login_user
 init_db()
 
 st.set_page_config(
-    page_title="BharatDub — AI Video Dubbing",
-    page_icon="🇮🇳",
+    page_title="VideoDubber — AI Dubbing",
+    page_icon="🎬",
     layout="centered"
 )
 
-
-st.markdown("""
-<style>
-.bharatdub-header {
-    background: linear-gradient(135deg, #FF6B35 0%, #F7931E 40%, #138808 100%);
-    padding: 2rem; border-radius: 16px; text-align: center;
-    margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(255,107,53,0.3);
-}
-.bharatdub-header h1 { color: white !important; font-size: 2.6rem; font-weight: 800; margin: 0; }
-.bharatdub-header p { color: rgba(255,255,255,0.92); font-size: 1rem; margin: 0.4rem 0 0; }
-.stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #FF6B35, #F7931E) !important;
-    border: none !important; border-radius: 10px !important; font-weight: 700 !important;
-}
-.stTabs [aria-selected="true"] { background: linear-gradient(135deg, #FF6B35, #F7931E) !important; color: white !important; }
-</style>
-""", unsafe_allow_html=True)
 HISTORY_FILE = "dub_history.json"
 
 # ── Session state defaults ────────────────────────────────────────────────────
@@ -66,7 +49,7 @@ for k, v in defaults.items():
 # AUTH PAGES
 # ══════════════════════════════════════════════════════════════════════════════
 def show_login():
-    st.markdown("<div class="bharatdub-header"><h1>🇮🇳 BharatDub</h1></div>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center'>🎬 VideoDubber</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center;color:#666'>AI-powered multilingual video dubbing</p>", unsafe_allow_html=True)
     st.divider()
 
@@ -97,7 +80,7 @@ def show_login():
 
 
 def show_register():
-    st.markdown("<div class="bharatdub-header"><h1>🇮🇳 BharatDub</h1></div>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center'>🎬 VideoDubber</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center;color:#666'>Create your free account</p>", unsafe_allow_html=True)
     st.divider()
 
@@ -270,28 +253,25 @@ def run_dubbing_pipeline(video_path: str, source_label: str = "upload"):
 # YOUTUBE HELPERS
 # ══════════════════════════════════════════════════════════════════════════════
 def download_youtube_video(url: str) -> str:
-    tmp_path = tempfile.mktemp(suffix=".mp4")
+    tmp_path   = tempfile.mktemp(suffix=".mp4")
     base_flags = [
         "--format", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
         "--merge-output-format", "mp4",
         "--output", tmp_path,
         "--no-playlist", "--no-warnings",
-        "--extractor-retries", "5",
-        "--socket-timeout", "30",
-        "--user-agent", "com.google.android.youtube/17.36.4 (Linux; U; Android 12; GB) gzip",
+        "--extractor-retries", "3",
     ]
+
     def _run(extra):
         return subprocess.run(["yt-dlp"] + extra + base_flags + [url],
                               capture_output=True, text=True)
-    result = _run(["--extractor-args", "youtube:player_client=android,web;po_token=web+MnpUKpOeLFGMvMf6cJLYrA=="])
-    if result.returncode != 0:
-        result = _run(["--extractor-args", "youtube:player_client=android"])
-    if result.returncode != 0:
-        result = _run(["--extractor-args", "youtube:player_client=mweb"])
+
+    result = _run(["--cookies-from-browser", "chrome"])
     if result.returncode != 0:
         result = _run([])
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or "yt-dlp failed.")
+
     if not os.path.exists(tmp_path):
         alt = tmp_path + ".mp4"
         if os.path.exists(alt):
@@ -309,7 +289,7 @@ def extract_video_id(url: str):
 # ══════════════════════════════════════════════════════════════════════════════
 # MAIN APP
 # ══════════════════════════════════════════════════════════════════════════════
-st.markdown('<div class="bharatdub-header"><h1>🇮🇳 BharatDub</h1><p>AI-powered video dubbing — Kannada · Hindi · Tamil · Telugu · Malayalam · Gujarati</p></div>', unsafe_allow_html=True)
+st.title("🎬 VideoDubber")
 st.caption("AI-powered video dubbing — Kannada · Hindi · Tamil · Telugu · Malayalam · Bhojpuri · Gujarati")
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -540,7 +520,7 @@ with tab_batch:
             # Download results
             st.divider()
             st.subheader("📦 Batch Results")
-            for name, out_path, err in results:
+            for r_idx, (name, out_path, err) in enumerate(results):
                 if out_path and os.path.exists(out_path):
                     col_a, col_b = st.columns([3, 1])
                     with col_a:
@@ -551,7 +531,7 @@ with tab_batch:
                                 "⬇️ Download", data=f,
                                 file_name=f"dubbed_{name}",
                                 mime="video/mp4",
-                                key=f"dl_batch_{name}"
+                                key=f"dl_batch_{r_idx}"
                             )
                 else:
                     st.error(f"❌ {name}: {err}")
@@ -721,83 +701,171 @@ with tab_advanced:
     )
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 6 — TRANSLATE & DUB (Any Indian Language → Any Indian Language)
+# ══════════════════════════════════════════════════════════════════════════════
 with tab_translate:
     st.markdown("### 🌍 Translate & Dub — Any Indian Language")
-    st.markdown("Dub any video from **any Indian language** to **any other Indian language** using Google Translate.")
+    st.markdown(
+        "Upload a video in **any Indian language** and dub it into **any other Indian language**. "
+        "Uses Google Translate under the hood — Hindi → Kannada, Kannada → Tamil, and all other pairs."
+    )
+
     lang_names = list(ALL_INDIAN_LANGUAGES.keys())
+
     col_src, col_arrow, col_tgt = st.columns([5, 1, 5])
     with col_src:
-        src_lang = st.selectbox("Source Language", lang_names, index=lang_names.index("Hindi"), key="tl_src")
+        src_lang = st.selectbox("Source Language (spoken in video)", lang_names,
+                                index=lang_names.index("Hindi"), key="tl_src")
     with col_arrow:
-        st.markdown("<div style='text-align:center;font-size:2rem;padding-top:1.8rem'>→</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center;font-size:2rem;padding-top:1.8rem'>→</div>",
+                    unsafe_allow_html=True)
     with col_tgt:
-        tgt_lang = st.selectbox("Target Language", lang_names, index=lang_names.index("Kannada"), key="tl_tgt")
+        tgt_lang = st.selectbox("Target Language (dubbed output)", lang_names,
+                                index=lang_names.index("Kannada"), key="tl_tgt")
+
     if src_lang == tgt_lang:
-        st.warning("⚠️ Please choose different languages.")
+        st.warning("⚠️ Source and target language are the same — please choose different languages.")
+
     st.divider()
-    tl_file = st.file_uploader("Upload video", type=["mp4","mov","avi","mkv"], key="tl_uploader")
+
+    tl_file = st.file_uploader(
+        "Upload video to translate & dub",
+        type=["mp4", "mov", "avi", "mkv"],
+        key="tl_uploader"
+    )
+
     if tl_file:
         st.video(tl_file)
+
     if tl_file and src_lang != tgt_lang:
         st.markdown(f"**Will dub:** `{src_lang}` → `{tgt_lang}`")
+
         if st.button("🚀 Translate & Dub", key="btn_translate", type="primary", use_container_width=True):
-            import time as _t
-            tgt_info = LANGUAGES.get(tgt_lang, LANGUAGES["Hindi"])
-            src_code = ALL_INDIAN_LANGUAGES[src_lang]
-            tgt_code = ALL_INDIAN_LANGUAGES[tgt_lang]
+            tgt_info     = LANGUAGES.get(tgt_lang, LANGUAGES["Hindi"])
+            src_code     = ALL_INDIAN_LANGUAGES[src_lang]
+            tgt_code     = ALL_INDIAN_LANGUAGES[tgt_lang]
             voice_male   = tgt_info["voices_male"][0]
             voice_female = tgt_info["voices_female"][0]
+
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
                 tmp.write(tl_file.read())
                 video_path = tmp.name
-            progress = st.progress(0, text="Starting…")
-            status = st.empty()
-            t0 = _t.time()
+
+            progress   = st.progress(0, text="Starting…")
+            status     = st.empty()
+            start_time = time.time()
+
             try:
-                status.info(f"🎙️ Transcribing {src_lang}…"); progress.progress(10)
+                status.info(f"🎙️ Transcribing {src_lang} audio with Whisper…")
+                progress.progress(10, text="Transcribing…")
                 segments = transcribe(video_path)
-                st.success(f"✅ Transcribed {len(segments)} segments")
+                st.success(f"✅ Transcribed {len(segments)} segments in {src_lang}")
+
+                # Show source transcription preview
                 if segments:
-                    st.info(f"📄 _{' '.join(s['text'] for s in segments[:2])[:200]}_")
-                status.info(f"🌐 Translating {src_lang} → {tgt_lang}…"); progress.progress(30)
-                translated = translate_segments(segments, target_lang=tgt_code, source_lang=src_code)
+                    preview = " ".join(s["text"] for s in segments[:2])
+                    st.info(f"📄 Source: _{preview[:200]}{'…' if len(preview) > 200 else ''}_")
+
+                status.info(f"🌐 Translating {src_lang} → {tgt_lang} via Google Translate…")
+                progress.progress(30, text="Translating…")
+                translated = translate_segments(segments,
+                                               target_lang=tgt_code,
+                                               source_lang=src_code)
                 st.success(f"✅ Translated to {tgt_lang}")
+
+                # Show translated preview
                 if translated:
-                    st.info(f"🔤 _{' '.join(s['text'] for s in translated[:2])[:200]}_")
-                status.info(f"🔊 Synthesizing {tgt_lang} voice…"); progress.progress(50)
-                synthesized = synthesize_segments(translated, voice_gender=voice_gender,
-                    voice_male=voice_male, voice_female=voice_female, language=tgt_lang.lower())
-                st.success("✅ Audio synthesized")
+                    tpreview = " ".join(s["text"] for s in translated[:2])
+                    st.info(f"🔤 Translated: _{tpreview[:200]}{'…' if len(tpreview) > 200 else ''}_")
+
+                active_voice_label = voice_female if voice_gender == "female" else voice_male
+                status.info(f"🔊 Synthesizing {tgt_lang} {voice_gender} voice ({active_voice_label})…")
+                progress.progress(50, text="Synthesizing…")
+                synthesized = synthesize_segments(
+                    translated,
+                    voice_gender=voice_gender,
+                    voice_male=voice_male,
+                    voice_female=voice_female,
+                    language=tgt_lang.lower()
+                )
+                st.success(f"✅ {tgt_lang} audio synthesized")
+
                 if generate_subtitles:
-                    status.info("📝 Subtitles…"); progress.progress(65)
+                    status.info("📝 Generating subtitles…")
+                    progress.progress(65, text="Generating subtitles…")
                     os.makedirs("output", exist_ok=True)
                     generate_srt(translated, "output/subtitles.srt")
                     st.success("✅ Subtitles generated")
-                status.info("🎞️ Merging…"); progress.progress(75)
-                output_path = merge_audio_video(video_path, synthesized)
-                elapsed = round(_t.time() - t0, 1)
-                progress.progress(100, text="Done!")
-                status.success(f"🎉 {src_lang} → {tgt_lang} complete in {elapsed}s!")
-                st.divider()
-                st.subheader(f"🎬 {src_lang} → {tgt_lang}")
-                st.video(output_path)
-                with open(output_path, "rb") as f:
-                    st.download_button(f"⬇️ Download {tgt_lang} Dubbed Video", data=f,
-                        file_name=f"dubbed_{src_lang}_to_{tgt_lang}.mp4", mime="video/mp4", use_container_width=True)
-                if generate_subtitles and os.path.exists("output/subtitles.srt"):
-                    with open("output/subtitles.srt") as f:
-                        st.download_button("⬇️ Download Subtitles", data=f,
-                            file_name=f"subtitles_{src_lang}_to_{tgt_lang}.srt", mime="text/plain", use_container_width=True)
-            except Exception as e:
-                status.error(f"❌ {e}"); st.exception(e)
-            finally:
-                if os.path.exists(video_path): os.remove(video_path)
-    elif tl_file and src_lang == tgt_lang:
-        st.warning("Please select different languages.")
-    else:
-        st.info("👆 Upload a video above to get started")
-        st.markdown("""
-**Example pairs:** Hindi→Kannada · Kannada→Tamil · Tamil→Telugu · Bengali→Hindi
 
-**16 languages:** Kannada · Hindi · Tamil · Telugu · Malayalam · Bengali · Marathi · Gujarati · Punjabi · Urdu · Odia · Assamese · Bhojpuri · Maithili · Sanskrit · Sindhi
+                status.info("🎞️ Merging audio and video…")
+                progress.progress(75, text="Merging…")
+                output_path = merge_audio_video(video_path, synthesized)
+                st.success("✅ Merged!")
+
+                elapsed = round(time.time() - start_time, 1)
+                progress.progress(100, text="Done!")
+                status.success(f"🎉 {src_lang} → {tgt_lang} dubbing complete in {elapsed}s!")
+
+                save_history({
+                    "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "source":    f"translate:{src_lang}→{tgt_lang}:{tl_file.name}",
+                    "language":  tgt_lang,
+                    "gender":    voice_gender,
+                    "segments":  len(segments),
+                    "elapsed_s": elapsed,
+                    "output":    output_path,
+                })
+
+                st.divider()
+                st.subheader(f"🎬 Dubbed Video ({src_lang} → {tgt_lang})")
+                st.video(output_path)
+
+                with open(output_path, "rb") as f:
+                    st.download_button(
+                        label=f"⬇️ Download {tgt_lang} Dubbed Video",
+                        data=f,
+                        file_name=f"dubbed_{src_lang}_to_{tgt_lang}.mp4",
+                        mime="video/mp4",
+                        use_container_width=True
+                    )
+
+                if generate_subtitles and os.path.exists("output/subtitles.srt"):
+                    with open("output/subtitles.srt", "r") as f:
+                        st.download_button(
+                            label=f"⬇️ Download {tgt_lang} Subtitles (.srt)",
+                            data=f,
+                            file_name=f"subtitles_{src_lang}_to_{tgt_lang}.srt",
+                            mime="text/plain",
+                            use_container_width=True
+                        )
+
+            except Exception as e:
+                status.error(f"❌ Error: {e}")
+                st.exception(e)
+
+            finally:
+                if os.path.exists(video_path):
+                    os.remove(video_path)
+
+    elif tl_file and src_lang == tgt_lang:
+        st.warning("Please select different source and target languages above.")
+    else:
+        st.info("👆 Upload a video file above to get started")
+        st.markdown("""
+**Supported language pairs (examples):**
+
+| From | To |
+|---|---|
+| Hindi | Kannada |
+| Kannada | Tamil |
+| Tamil | Telugu |
+| Bengali | Hindi |
+| Marathi | Gujarati |
+| Telugu | Malayalam |
+| Urdu | Hindi |
+
+**All 15 Indian languages supported** — any combination works!
+
+**Languages:** Kannada · Hindi · Tamil · Telugu · Malayalam · Bengali · Marathi · Gujarati · Punjabi · Urdu · Odia · Assamese · Bhojpuri · Maithili · Sanskrit · Sindhi
         """)
