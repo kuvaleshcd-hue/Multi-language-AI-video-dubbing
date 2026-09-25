@@ -1,4 +1,4 @@
-# 🎬 video-dubber-v4
+# 🎬 video-dubber-v4:-
 
 ![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
@@ -7,7 +7,7 @@
 
 > **AI-powered video dubbing system that transcribes, translates, and re-voices video content into Kannada using Whisper, gTTS, and MoviePy.**
 
-## ✨ Features
+## ✨ Features:-
 - 🎙️ **Auto Transcription** — Extracts speech from any video using OpenAI Whisper
 - 🌐 **AI Translation** — Translates English audio to Kannada using deep-translator
 - 🔊 **Voice Synthesis** — Generates natural Kannada speech using gTTS
@@ -20,7 +20,7 @@
 Video Input → [extractor] → [transcriber] → [translator] → [synthesizer] → [merger] → Dubbed Video 🎬
 ```
 
-## ⚙️ Installation
+## ⚙️ Installation:-
 ```bash
 git clone https://github.com/kuvaleshcd-hue/video-dubber-v4-.git
 cd video-dubber-v4-
@@ -34,7 +34,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack:-
 | Component | Technology |
 |---|---|
 | Speech Recognition | OpenAI Whisper |
