@@ -51,6 +51,6 @@ streamlit run app.py
 
 ## 👨‍💻 Author
 **Kuvalesh** — [@kuvaleshcd-hue](https://github.com/kuvaleshcd-hue)
-
+    
 ## 📄 License
 MIT License
