@@ -13,7 +13,7 @@ load_dotenv()
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from pipeline.transcriber import transcribe
+from pipeline.transcriber import transcribe, transcribe_streaming
 from pipeline.translator import translate_segments, generate_srt, LANGUAGES, ALL_INDIAN_LANGUAGES
 from pipeline.synthesizer import synthesize_segments
 from pipeline.merger import merge_audio_video
@@ -159,16 +159,82 @@ def run_dubbing_pipeline(video_path: str, source_label: str = "upload"):
     start_time = time.time()
 
     try:
+        # ── Step 1: Transcription with live preview ───────────────────────────
         status.info("🎙️ Transcribing audio with Whisper...")
-        progress.progress(10, text="Transcribing...")
-        segments = transcribe(video_path)
+        progress.progress(5, text="Loading Whisper model...")
+
+        # Live transcript panel — expander so it doesn't dominate the page
+        transcript_expander = st.expander(
+            "📋 Live Transcript Preview", expanded=True
+        )
+        with transcript_expander:
+            transcript_header = st.empty()
+            transcript_header.caption("⏳ Transcribing… segments will appear below as they are processed.")
+            transcript_table  = st.empty()   # replaced with growing markdown table
+
+        # Accumulate rows so we can redraw the table each callback
+        _live_rows: list[dict] = []          # {idx, start, end, text}
+
+        def _on_segment(seg: dict, idx: int, total: int):
+            _live_rows.append({
+                "idx":   idx + 1,
+                "start": f"{seg['start']:.1f}s",
+                "end":   f"{seg['end']:.1f}s",
+                "text":  seg["text"],
+            })
+            # Rebuild markdown table with all rows seen so far
+            header = "| # | Time | Transcript |\n|---|---|---|\n"
+            rows   = "".join(
+                f"| {r['idx']} | {r['start']}–{r['end']} | {r['text']} |\n"
+                for r in _live_rows
+            )
+            transcript_table.markdown(header + rows)
+            transcript_header.caption(
+                f"📝 Transcribed **{idx + 1} / {total}** segment(s)"
+            )
+            # Push progress bar forward proportionally across the 5–25% band
+            pct = 5 + int((idx + 1) / max(total, 1) * 20)
+            progress.progress(pct, text=f"Transcribing… {idx + 1}/{total}")
+
+        segments = transcribe_streaming(video_path, on_segment=_on_segment)
+
+        transcript_header.caption(
+            f"✅ Transcription complete — **{len(segments)} segment(s)** detected."
+        )
         st.success(f"✅ Transcribed {len(segments)} segments")
 
+        # ── Step 2: Translation with live preview ─────────────────────────────
         status.info(f"🌐 Translating to {target_language}...")
-        progress.progress(30, text="Translating...")
-        translated = translate_segments(segments, target_lang=lang_info["code"])
-        st.success(f"✅ Translated to {target_language}")
+        progress.progress(28, text="Translating...")
 
+        # Extend the live table to show translations inline
+        translation_expander = st.expander(
+            f"🌐 Live Translation Preview → {target_language}", expanded=True
+        )
+        with translation_expander:
+            trans_header = st.empty()
+            trans_header.caption("⏳ Translating segments…")
+            trans_table  = st.empty()
+
+        translated = translate_segments(segments, target_lang=lang_info["code"])
+
+        # Build combined original + translated table
+        def _render_trans_table(done: int, total: int):
+            header = "| # | Original | Translated |\n|---|---|---|\n"
+            rows   = "".join(
+                f"| {i+1} | {segments[i]['text']} | {translated[i]['text']} |\n"
+                for i in range(done)
+            )
+            trans_table.markdown(header + rows)
+            trans_header.caption(
+                f"🔤 Translated **{done} / {total}** segment(s) → {target_language}"
+            )
+
+        _render_trans_table(len(translated), len(segments))
+        st.success(f"✅ Translated to {target_language}")
+        progress.progress(45, text="Translation done.")
+
+        # ── Step 3: Synthesis ─────────────────────────────────────────────────
         active_voice_label = voice_female if voice_gender == "female" else voice_male
         status.info(f"🔊 Synthesizing {voice_gender} voice ({active_voice_label})...")
         progress.progress(50, text="Synthesizing audio...")
@@ -181,6 +247,7 @@ def run_dubbing_pipeline(video_path: str, source_label: str = "upload"):
         )
         st.success("✅ Audio synthesized with gender pitch shift")
 
+        # ── Step 4: Subtitles ─────────────────────────────────────────────────
         if generate_subtitles:
             status.info("📝 Generating subtitles...")
             progress.progress(65, text="Generating subtitles...")
@@ -188,11 +255,13 @@ def run_dubbing_pipeline(video_path: str, source_label: str = "upload"):
             generate_srt(translated, "output/subtitles.srt")
             st.success("✅ Subtitles generated")
 
+        # ── Step 5: Merge ─────────────────────────────────────────────────────
         status.info("🎞️ Merging audio and video...")
         progress.progress(75, text="Merging...")
         output_path = merge_audio_video(video_path, synthesized)
         st.success("✅ Audio merged with video")
 
+        # ── Step 6: Lip sync (optional) ───────────────────────────────────────
         if enable_lipsync:
             status.info("💋 Running lip sync via D-ID...")
             progress.progress(85, text="Lip syncing...")
@@ -1012,16 +1081,40 @@ with tab_translate:
             start_time = time.time()
 
             try:
+                # ── Transcription with live preview ───────────────────────────
                 status.info(f"🎙️ Transcribing {src_lang} audio with Whisper…")
-                progress.progress(10, text="Transcribing…")
-                segments = transcribe(video_path)
+                progress.progress(5, text="Transcribing…")
+
+                tx_expander = st.expander("📋 Live Transcript Preview", expanded=True)
+                with tx_expander:
+                    tx_header = st.empty()
+                    tx_header.caption("⏳ Transcribing… segments will appear below.")
+                    tx_table  = st.empty()
+
+                _tl_rows: list[dict] = []
+
+                def _on_tl_seg(seg: dict, idx: int, total: int):
+                    _tl_rows.append({
+                        "idx":   idx + 1,
+                        "start": f"{seg['start']:.1f}s",
+                        "end":   f"{seg['end']:.1f}s",
+                        "text":  seg["text"],
+                    })
+                    header = "| # | Time | Transcript |\n|---|---|---|\n"
+                    rows   = "".join(
+                        f"| {r['idx']} | {r['start']}–{r['end']} | {r['text']} |\n"
+                        for r in _tl_rows
+                    )
+                    tx_table.markdown(header + rows)
+                    tx_header.caption(f"📝 Transcribed **{idx + 1} / {total}** segment(s)")
+                    pct = 5 + int((idx + 1) / max(total, 1) * 20)
+                    progress.progress(pct, text=f"Transcribing… {idx + 1}/{total}")
+
+                segments = transcribe_streaming(video_path, on_segment=_on_tl_seg)
+                tx_header.caption(f"✅ {len(segments)} segment(s) transcribed in {src_lang}")
                 st.success(f"✅ Transcribed {len(segments)} segments in {src_lang}")
 
-                # Show source transcription preview
-                if segments:
-                    preview = " ".join(s["text"] for s in segments[:2])
-                    st.info(f"📄 Source: _{preview[:200]}{'…' if len(preview) > 200 else ''}_")
-
+                # ── Translation with live preview ─────────────────────────────
                 status.info(f"🌐 Translating {src_lang} → {tgt_lang} via Google Translate…")
                 progress.progress(30, text="Translating…")
                 translated = translate_segments(segments,
@@ -1029,10 +1122,21 @@ with tab_translate:
                                                source_lang=src_code)
                 st.success(f"✅ Translated to {tgt_lang}")
 
-                # Show translated preview
-                if translated:
-                    tpreview = " ".join(s["text"] for s in translated[:2])
-                    st.info(f"🔤 Translated: _{tpreview[:200]}{'…' if len(tpreview) > 200 else ''}_")
+                # Side-by-side original / translated table
+                tr_expander = st.expander(f"🌐 Live Translation Preview → {tgt_lang}", expanded=True)
+                with tr_expander:
+                    tr_header = st.empty()
+                    tr_table  = st.empty()
+                    hdr = "| # | Original | Translated |\n|---|---|---|\n"
+                    rows = "".join(
+                        f"| {i+1} | {segments[i]['text']} | {translated[i]['text']} |\n"
+                        for i in range(len(translated))
+                    )
+                    tr_table.markdown(hdr + rows)
+                    tr_header.caption(
+                        f"🔤 **{len(translated)}** segment(s) translated → {tgt_lang}"
+                    )
+                progress.progress(45, text="Translation done.")
 
                 active_voice_label = voice_female if voice_gender == "female" else voice_male
                 status.info(f"🔊 Synthesizing {tgt_lang} {voice_gender} voice ({active_voice_label})…")
