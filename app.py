@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import json
 import time
@@ -281,9 +282,96 @@ def download_youtube_video(url: str) -> str:
 
 
 def extract_video_id(url: str):
-    import re
     m = re.search(r"(?:v=|youtu\.be/|shorts/|embed/)([A-Za-z0-9_-]{11})", url)
     return m.group(1) if m else None
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# MEETING RECORDING HELPERS
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Platform detection regexes
+_PLATFORM_PATTERNS = {
+    "Google Meet (Drive)": re.compile(
+        r"drive\.google\.com/(?:file/d/|open\?id=|uc\?id=)([A-Za-z0-9_-]+)"
+    ),
+    "Zoom": re.compile(
+        r"(?:zoom\.us|us\d+web\.zoom\.us)/rec/(?:share|play)/([A-Za-z0-9_\-%.]+)"
+    ),
+    "Loom": re.compile(
+        r"loom\.com/share/([A-Za-z0-9]+)"
+    ),
+    "Microsoft Teams": re.compile(
+        r"(?:teams\.microsoft\.com|sharepoint\.com).*(?:video|recording)"
+    ),
+    "Direct Video": re.compile(
+        r"https?://[^\s]+\.(?:mp4|mov|avi|mkv|webm)(?:\?[^\s]*)?"
+    ),
+}
+
+
+def detect_meeting_platform(url: str) -> str:
+    """Return a friendly platform label for a given URL."""
+    for label, pattern in _PLATFORM_PATTERNS.items():
+        if pattern.search(url):
+            return label
+    return "Unknown"
+
+
+def download_meeting_video(url: str, cookies_browser: str = "chrome") -> str:
+    """
+    Download a meeting recording from Google Drive, Zoom, Loom, Teams, or any
+    direct video URL using yt-dlp. Returns the local file path on success.
+    """
+    tmp_path = tempfile.mktemp(suffix=".mp4")
+
+    base_flags = [
+        "--format", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+        "--merge-output-format", "mp4",
+        "--output", tmp_path,
+        "--no-playlist", "--no-warnings",
+        "--extractor-retries", "3",
+    ]
+
+    platform = detect_meeting_platform(url)
+
+    # Google Drive: transform share URL → direct download URL for yt-dlp
+    if platform == "Google Meet (Drive)":
+        m = _PLATFORM_PATTERNS["Google Meet (Drive)"].search(url)
+        if m:
+            file_id = m.group(1)
+            url = f"https://drive.google.com/uc?export=download&id={file_id}"
+
+    def _run(extra_flags):
+        return subprocess.run(
+            ["yt-dlp"] + extra_flags + base_flags + [url],
+            capture_output=True, text=True
+        )
+
+    # First try with browser cookies (helps with authenticated recordings)
+    if cookies_browser and cookies_browser != "none":
+        result = _run(["--cookies-from-browser", cookies_browser])
+    else:
+        result = _run([])
+
+    # Fallback: retry without cookies
+    if result.returncode != 0 and cookies_browser and cookies_browser != "none":
+        result = _run([])
+
+    if result.returncode != 0:
+        err = result.stderr.strip() or result.stdout.strip() or "yt-dlp failed."
+        raise RuntimeError(err)
+
+    # yt-dlp sometimes appends .mp4 to the given output name
+    if not os.path.exists(tmp_path):
+        alt = tmp_path + ".mp4"
+        if os.path.exists(alt):
+            return alt
+        raise FileNotFoundError(
+            "Downloaded file not found. The recording may require a password, "
+            "sign-in, or is no longer available."
+        )
+    return tmp_path
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -334,10 +422,11 @@ with st.sidebar:
         if adv.adv_noise:              st.caption("Noise reduction: On")
 
 
-# ── Five Tabs ─────────────────────────────────────────────────────────────────
-tab_upload, tab_youtube, tab_batch, tab_history, tab_advanced, tab_translate = st.tabs([
+# ── Tabs ──────────────────────────────────────────────────────────────────────
+tab_upload, tab_youtube, tab_meeting, tab_batch, tab_history, tab_advanced, tab_translate = st.tabs([
     "📁 Upload Video",
     "▶️ YouTube URL",
+    "📹 Meeting Recording",
     "📂 Batch Dub",
     "📊 History",
     "⚙️ Advanced",
@@ -429,7 +518,173 @@ with tab_youtube:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 3 — BATCH DUB
+# TAB 3 — MEETING RECORDING
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_meeting:
+    st.markdown("### 📹 Dub a Meeting Recording")
+    st.markdown(
+        "Paste a **Google Meet** (Drive link), **Zoom**, **Loom**, or any direct video URL "
+        "— the recording is downloaded and dubbed automatically."
+    )
+
+    # ── Platform info cards ───────────────────────────────────────────────────
+    with st.expander("ℹ️ Supported platforms & requirements", expanded=False):
+        st.markdown("""
+| Platform | Link format | Auth needed? |
+|---|---|---|
+| **Google Meet** | Google Drive share link (`drive.google.com/file/d/…`) | ✅ Sign in to Google in Chrome |
+| **Zoom** | Cloud recording share link (`zoom.us/rec/share/…`) | ⚠️ Public or password-free only |
+| **Loom** | Share link (`loom.com/share/…`) | Public videos only |
+| **Microsoft Teams** | SharePoint/Teams recording link | ✅ Sign in to Edge |
+| **Direct URL** | Any `.mp4 / .mov / .avi / .mkv` direct link | Depends on server |
+
+> **Google Meet recordings** are saved to Google Drive. Use the **"Share" → "Copy link"**
+> option in Drive and make sure the sharing is set to *"Anyone with the link"*, or sign in
+> to your Google account in Chrome so your credentials can be passed.
+        """)
+
+    # ── URL input ─────────────────────────────────────────────────────────────
+    meeting_url = st.text_input(
+        "Meeting Recording URL",
+        placeholder="https://drive.google.com/file/d/... or https://zoom.us/rec/share/...",
+        help="Paste the share link from Google Drive, Zoom, Loom, Teams, or any direct .mp4 URL"
+    )
+
+    # Detect & show platform badge
+    platform_label = ""
+    if meeting_url and meeting_url.startswith("http"):
+        platform_label = detect_meeting_platform(meeting_url)
+        badge_color = {
+            "Google Meet (Drive)": "🟢",
+            "Zoom":                "🔵",
+            "Loom":                "🟣",
+            "Microsoft Teams":     "🔷",
+            "Direct Video":        "⬜",
+            "Unknown":             "🔴",
+        }.get(platform_label, "🔴")
+
+        if platform_label != "Unknown":
+            st.success(f"{badge_color} Detected platform: **{platform_label}**")
+        else:
+            st.warning(
+                "⚠️ Platform not recognised. Only Google Meet (Drive), Zoom, Loom, "
+                "Teams share links, and direct video URLs are supported."
+            )
+
+    # ── Cookie browser selector ───────────────────────────────────────────────
+    with st.expander("🔐 Authentication (for private / signed-in recordings)", expanded=False):
+        st.markdown(
+            "If the recording is **not public**, select the browser you are signed "
+            "in to — credentials are read locally by yt-dlp and never sent anywhere."
+        )
+        cookie_browser = st.selectbox(
+            "Browser to read cookies from",
+            ["chrome", "firefox", "edge", "safari", "brave", "opera", "none"],
+            index=0,
+            help=(
+                "Choose the browser where you are signed in to the meeting platform. "
+                "Select 'none' for fully public URLs."
+            ),
+            key="meeting_cookie_browser"
+        )
+        st.caption(
+            "🔒 Cookies are read **only** by the local yt-dlp process and are **never** "
+            "uploaded or transmitted outside your machine."
+        )
+
+    # ── Fallback: manual upload ───────────────────────────────────────────────
+    st.divider()
+    st.markdown("#### 📤 Or upload a locally saved recording")
+    st.caption(
+        "If the URL download doesn't work (e.g. the recording is behind a corporate SSO), "
+        "download the file manually from your meeting platform and upload it here."
+    )
+    meeting_file = st.file_uploader(
+        "Upload meeting recording",
+        type=["mp4", "mov", "avi", "mkv", "webm"],
+        key="meeting_uploader"
+    )
+
+    if meeting_file:
+        st.video(meeting_file)
+
+    st.divider()
+
+    # ── Action buttons ────────────────────────────────────────────────────────
+    col_url_btn, col_upload_btn = st.columns(2)
+
+    url_ready    = bool(meeting_url and meeting_url.startswith("http") and platform_label not in ("", "Unknown"))
+    upload_ready = meeting_file is not None
+
+    with col_url_btn:
+        url_btn = st.button(
+            "⬇️ Download & Dub from URL",
+            key="btn_meeting_url",
+            type="primary",
+            use_container_width=True,
+            disabled=not url_ready,
+        )
+
+    with col_upload_btn:
+        upload_btn = st.button(
+            "🚀 Dub Uploaded Recording",
+            key="btn_meeting_upload",
+            type="primary",
+            use_container_width=True,
+            disabled=not upload_ready,
+        )
+
+    # ── URL-based download & dub ──────────────────────────────────────────────
+    if url_btn and url_ready:
+        with st.spinner(f"⬇️ Downloading recording from {platform_label}…"):
+            try:
+                video_path = download_meeting_video(
+                    meeting_url,
+                    cookies_browser=st.session_state.get("meeting_cookie_browser", "chrome")
+                )
+            except Exception as e:
+                st.error(f"❌ Download failed: {e}")
+                st.markdown("""
+**Troubleshooting tips:**
+- Make sure the sharing is set to *"Anyone with the link"*
+- For Google Drive: open Chrome, sign in to Google, then try again with **chrome** selected above
+- For Zoom: the recording must be a **public** cloud recording (password-protected links are not supported)
+- As a fallback, download the recording manually and use the **upload** option below
+                """)
+                st.stop()
+
+        file_size_mb = round(os.path.getsize(video_path) / 1024 / 1024, 1)
+        st.success(f"✅ Downloaded! ({file_size_mb} MB) — Starting dubbing pipeline…")
+        run_dubbing_pipeline(video_path, source_label=f"meeting:{platform_label}:{meeting_url}")
+
+    # ── Upload-based dub ──────────────────────────────────────────────────────
+    if upload_btn and upload_ready:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
+            tmp.write(meeting_file.read())
+            video_path = tmp.name
+        st.success(f"✅ Uploaded {meeting_file.name} — Starting dubbing pipeline…")
+        run_dubbing_pipeline(video_path, source_label=f"meeting:upload:{meeting_file.name}")
+
+    # ── Empty state ───────────────────────────────────────────────────────────
+    if not url_ready and not upload_ready:
+        st.info("👆 Paste a meeting recording URL above, or upload a locally saved recording")
+        st.markdown("""
+**How to get the link:**
+
+🟢 **Google Meet** — After the meeting, open **Google Drive** → find the recording →
+click the three-dot menu → **Share** → **Copy link** (set to *Anyone with the link*).
+
+🔵 **Zoom** — In the Zoom portal, go to **Recordings** → find the recording →
+click **Share** → copy the shareable link.
+
+🟣 **Loom** — Open the Loom recording → click **Share** → **Copy link**.
+
+🔷 **Teams** — Open the meeting chat → click on the recording → **Copy link**.
+        """)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 4 — BATCH DUB
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_batch:
     st.markdown("### 📂 Batch Dub Multiple Videos")
@@ -547,7 +802,7 @@ with tab_batch:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 4 — HISTORY
+# TAB 5 — HISTORY
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_history:
     st.markdown("### 📊 Dubbing History")
@@ -610,7 +865,7 @@ with tab_history:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 5 — ADVANCED SETTINGS
+# TAB 6 — ADVANCED SETTINGS
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_advanced:
     st.markdown("### ⚙️ Advanced Audio Settings")
@@ -702,7 +957,7 @@ with tab_advanced:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 6 — TRANSLATE & DUB (Any Indian Language → Any Indian Language)
+# TAB 7 — TRANSLATE & DUB (Any Indian Language → Any Indian Language)
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_translate:
     st.markdown("### 🌍 Translate & Dub — Any Indian Language")
