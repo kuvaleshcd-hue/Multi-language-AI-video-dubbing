@@ -11,7 +11,7 @@
 - 🎙️ **Auto Transcription** — Extracts speech from any video using OpenAI Whisper.  
 - 🌐 **AI Translation** — Translates English audio to Kannada using deep-translator
 - 🔊 **Voice Synthesis** — Generates natural Kannada speech using gTTS
-- 🎞️ **Video Merging** — Merges dubbed audio back into the original video with MoviePy
+- 🎞️ **Video Merging** — Merges dubbed audio back into the original video with MoviePy.  
 - 🔐 **User Authentication** — Secure login system with session management
 - 🖥️ **Streamlit UI** — Clean web interface, no CLI required
 
