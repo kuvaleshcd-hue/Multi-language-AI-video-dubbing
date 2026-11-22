@@ -8,7 +8,7 @@
 > **AI-powered video dubbing system that transcribes, translates, and re-voices video content into Kannada using Whisper, gTTS, and MoviePy.**
 
 ## ✨ Features:-
-- 🎙️ **Auto Transcription** — Extracts speech from any video using OpenAI Whisper
+- 🎙️ **Auto Transcription** — Extracts speech from any video using OpenAI Whisper.  
 - 🌐 **AI Translation** — Translates English audio to Kannada using deep-translator
 - 🔊 **Voice Synthesis** — Generates natural Kannada speech using gTTS
 - 🎞️ **Video Merging** — Merges dubbed audio back into the original video with MoviePy
