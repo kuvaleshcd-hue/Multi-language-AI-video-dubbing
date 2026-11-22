@@ -22,7 +22,7 @@ Video Input → [extractor] → [transcriber] → [translator] → [synthesizer]
 
 ## ⚙️ Installation:-
 ```bash
-git clone https://github.com/kuvaleshcd-hue/video-dubber-v4-.git
+git clone https://github.com/kuvaleshcd-hue/video-dubber-v4-.git.  
 cd video-dubber-v4-
 python -m venv venv
 source venv/bin/activate
