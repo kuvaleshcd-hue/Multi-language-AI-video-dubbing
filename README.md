@@ -46,7 +46,7 @@ streamlit run app.py
 ## 📸 Output
 
 <p align="center">
-  <img src="assets/output_qr.png" alt="Output QR Code" width="300"/>
+  <img src="assets/output_qr.png" alt="Output QR Code" width="300"/>.  
 </p>
 
 ## 👨‍💻 Author
